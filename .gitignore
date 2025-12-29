@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+myenv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temp files
+*.tmp
+*.log
+.DS_Store
+
+# PaddleOCR cache
+.paddleocr/
+inference/
+
+# Temporary upload files
+temp_*
+uploads/
+
+# Environment variables - KEEP THIS SECRET!
+.env
+
+# ChromaDB database
+chroma_db/
+
+# OCR results
+ocr_results/
+result_*.json
+
+# Installation logs
+install_log*.txt
+install_log_*.txt
+
+# Test and verification files
+verify_env.py
+test_*.py
+diagnose.sh
+
+# Test PDFs - Specific files
+test-pdf.pdf
+blog22.pdf
+table-test.pdf
+FINAL_ST06_USC_Data-Classification-Standard.pdf
+
+# All PDF files (if you want to exclude all PDFs, uncomment below)
+# *.pdf
+
+# Zip files and archives
+*.zip
+OCR_backend.zip
+
+# Additional result files
+time

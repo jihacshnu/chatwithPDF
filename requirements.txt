@@ -1,0 +1,36 @@
+# Core FastAPI Backend
+setuptools>=65.0.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# OCR & PDF Processing
+paddlepaddle>=2.6.0
+paddleocr==3.3.2
+pdf2image==1.16.3
+PyMuPDF==1.23.8
+opencv-python-headless==4.8.1.78
+Pillow==10.1.0
+
+# Table Extraction
+camelot-py[cv]==0.11.0
+pandas==2.0.3
+tabulate==0.9.0
+
+# RAG & Vector Database
+chromadb==0.4.22
+sentence-transformers==2.3.1
+
+# LLM Integration - UPDATED VERSION!
+openai==2.8.1
+tiktoken==0.5.2
+
+# LangChain (optional - can remove if not used)
+langchain==0.1.0
+langchain-community==0.0.13
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Additional Dependencies
+numpy>=1.24.3

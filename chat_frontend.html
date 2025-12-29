@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatPDF - Ask Questions to Your PDF</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      height: calc(100vh - 200px);
+    }
+
+    .sidebar {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      overflow-y: auto;
+    }
+
+    .chat-area {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .upload-area {
+      border: 2px dashed #667eea;
+      border-radius: 10px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    .upload-area:hover {
+      border-color: #764ba2;
+      background: #f8f9ff;
+    }
+
+    .upload-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+      width: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .document-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .document-info p {
+      margin: 5px 0;
+      font-size: 0.9rem;
+      color: #333;
+    }
+
+    .document-info strong {
+      color: #667eea;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-ready {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-processing {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .chat-header {
+      padding: 20px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 15px;
+      border-radius: 15px;
+      animation: fadeIn 0.3s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .message-assistant {
+      align-self: flex-start;
+      background: #f0f2ff;
+      color: #333;
+    }
+
+    .message-content {
+      line-height: 1.6;
+    }
+
+    .message-sources {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.3);
+      font-size: 0.85rem;
+    }
+
+    .source-item {
+      margin: 5px 0;
+      opacity: 0.9;
+    }
+
+    .chat-input-area {
+      padding: 20px;
+      border-top: 2px solid #f0f0f0;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    #questionInput {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 25px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    #questionInput:focus {
+      border-color: #667eea;
+    }
+
+    .send-btn {
+      width: auto;
+      padding: 12px 30px;
+      border-radius: 25px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 10px 0;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>💬 ChatPDF</h1>
+      <p>Upload a PDF and ask questions - AI will answer!</p>
+    </div>
+
+    <div class="main-content">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="section-title">📁 Upload Document</div>
+
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📄</div>
+          <div>Click to upload PDF</div>
+          <input type="file" id="fileInput" accept=".pdf" />
+        </div>
+
+        <button type="button" class="btn" id="uploadBtn" style="display: none" onclick="uploadDocument(event)">
+          🚀 Process PDF
+        </button>
+
+        <div class="loading" id="uploadLoading">
+          <div class="spinner"></div>
+          <p>Processing PDF...</p>
+        </div>
+
+        <div class="error" id="errorBox"></div>
+
+        <div id="llmStatus" style="display: none; margin-top: 20px">
+          <div class="error" style="display: block">
+            ⚠️ <strong>LLM Not Initialized!</strong><br />
+            Set <code>OPENAI_API_KEY</code> in your .env file and restart the
+            server.
+          </div>
+        </div>
+
+        <div id="documentInfo" style="display: none">
+          <div class="section-title" style="margin-top: 30px">
+            📊 Document Info
+          </div>
+          <div class="document-info">
+            <p><strong>File:</strong> <span id="docFilename"></span></p>
+            <p><strong>Pages:</strong> <span id="docPages"></span></p>
+            <p><strong>Chunks:</strong> <span id="docChunks"></span></p>
+            <p>
+              <strong>Status:</strong>
+              <span class="status status-ready" id="docStatus">Ready</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Area -->
+      <div class="chat-area">
+        <div class="chat-container">
+          <div class="chat-header">
+            <h2 class="section-title" style="margin: 0">💬 Chat with PDF</h2>
+          </div>
+
+          <div class="chat-messages" id="chatMessages">
+            <div class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <p>Upload a PDF to start asking questions</p>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <div class="chat-input-container">
+              <input type="text" id="questionInput" placeholder="Ask a question about your PDF..." disabled />
+              <button class="btn send-btn" id="sendBtn" onclick="sendQuestion()" disabled>
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000";
+    let selectedFile = null;
+    let currentDocumentId = null;
+    let conversationHistory = [];
+
+    // File input handler
+    document.getElementById("fileInput").addEventListener("change", (e) => {
+      if (e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        document.getElementById("uploadBtn").style.display = "block";
+        showError("");
+      }
+    });
+
+    // Upload document
+    async function uploadDocument(event) {
+      if (event) event.preventDefault();
+      if (!selectedFile) return false;
+
+      document.getElementById("uploadBtn").disabled = true;
+      document.getElementById("uploadLoading").classList.add("show");
+      showError("");
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      try {
+        const response = await fetch(`${API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || "Failed to upload PDF");
+        }
+
+        const data = await response.json();
+
+        // Store document ID
+        currentDocumentId = data.document_id;
+
+        // Update UI
+        document.getElementById("docFilename").textContent = data.filename;
+        document.getElementById("docPages").textContent =
+          data.ocr_result.pages.length;
+        document.getElementById("docChunks").textContent =
+          data.rag_summary.total_chunks;
+        document.getElementById("documentInfo").style.display = "block";
+
+        // Enable chat
+        document.getElementById("questionInput").disabled = false;
+        document.getElementById("sendBtn").disabled = false;
+
+        // Clear chat and show welcome message
+        const chatMessages = document.getElementById("chatMessages");
+        chatMessages.innerHTML = "";
+        addMessage(
+          `Document "${data.filename}" loaded! You can now ask questions about it.`,
+          "assistant"
+        );
+
+        conversationHistory = [];
+      } catch (error) {
+        console.error("Error:", error);
+        showError(error.message);
+      } finally {
+        document.getElementById("uploadLoading").classList.remove("show");
+        document.getElementById("uploadBtn").disabled = false;
+      }
+      return false;
+    }
+
+    // Send question
+    async function sendQuestion(event) {
+      if (event) event.preventDefault();
+      const questionInput = document.getElementById("questionInput");
+      const question = questionInput.value.trim();
+
+      if (!question || !currentDocumentId) return false;
+
+      // Add user message
+      addMessage(question, "user");
+      questionInput.value = "";
+
+      // Add to conversation history
+      conversationHistory.push({ role: "user", content: question });
+
+      // Show loading
+      const loadingId = addLoadingMessage();
+
+      try {
+        const response = await fetch(`${API_URL}/chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            document_id: currentDocumentId,
+            question: question,
+            conversation_history: conversationHistory,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || "Failed to get answer");
+        }
+
+        const data = await response.json();
+
+        // Remove loading message
+        removeLoadingMessage(loadingId);
+
+        // Add assistant message with sources
+        addMessage(data.answer, "assistant", data.sources);
+
+        // Add to conversation history
+        conversationHistory.push({ role: "assistant", content: data.answer });
+
+        // Keep only last 6 messages (3 exchanges)
+        if (conversationHistory.length > 6) {
+          conversationHistory = conversationHistory.slice(-6);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        removeLoadingMessage(loadingId);
+        addMessage(`Error: ${error.message}`, "assistant");
+      }
+      return false;
+    }
+
+    // Add message to chat
+    function addMessage(text, sender, sources = null) {
+      const chatMessages = document.getElementById("chatMessages");
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message message-${sender}`;
+
+      let html = `<div class="message-content">${escapeHtml(text)}</div>`;
+
+      if (sources && sources.length > 0) {
+        html += `<div class="message-sources"><strong>📚 Sources:</strong>`;
+        sources.forEach((source, idx) => {
+          html += `<div class="source-item">• Page ${source.page_num} (${(
+            source.similarity_score * 100
+          ).toFixed(1)}% match)</div>`;
+        });
+        html += `</div>`;
+      }
+
+      messageDiv.innerHTML = html;
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Add loading message
+    function addLoadingMessage() {
+      const chatMessages = document.getElementById("chatMessages");
+      const loadingDiv = document.createElement("div");
+      const loadingId = `loading_${Date.now()}`;
+      loadingDiv.id = loadingId;
+      loadingDiv.className = "message message-assistant";
+      loadingDiv.innerHTML = `
+          <div class="message-content">
+            <div class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></div>
+            Thinking...
+          </div>
+        `;
+      chatMessages.appendChild(loadingDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return loadingId;
+    }
+
+    // Remove loading message
+    function removeLoadingMessage(loadingId) {
+      const loadingDiv = document.getElementById(loadingId);
+      if (loadingDiv) {
+        loadingDiv.remove();
+      }
+    }
+
+    // Show error
+    function showError(message) {
+      const errorBox = document.getElementById("errorBox");
+      if (message) {
+        errorBox.textContent = `❌ Error: ${message}`;
+        errorBox.classList.add("show");
+      } else {
+        errorBox.classList.remove("show");
+      }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Enter key to send
+    document
+      .getElementById("questionInput")
+      .addEventListener("keypress", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendQuestion();
+        }
+      });
+
+    // Check API health on load
+    fetch(`${API_URL}/health`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("✅ API is healthy:", data);
+        if (!data.llm_initialized) {
+          console.warn(
+            "⚠️ LLM not initialized. Set OPENAI_API_KEY environment variable for full functionality."
+          );
+          document.getElementById("llmStatus").style.display = "block";
+          showError(
+            "LLM not initialized. Please set OPENAI_API_KEY in .env file and restart the server."
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("❌ API is not reachable:", error);
+        showError(
+          "Backend API is not running. Please start the server: uvicorn main:app --reload --port 8000"
+        );
+      });
+  </script>
+</body>
+
+</html>
